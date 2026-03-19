@@ -2,12 +2,6 @@ import { ReactElement, useEffect, useLayoutEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Button, FlatList, FlatListProps, ListRenderItemInfo, Modal, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, useColorScheme, View } from 'react-native';
 import { AntDesign as Icons } from '@expo/vector-icons';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
-const {Screen, Navigator} = createBottomTabNavigator()
-
-//depois vamos gerar uma arquitetura por meio de entidade e ai a gente vai separar esses tem
 
 
 interface Contato {
@@ -26,73 +20,6 @@ const ContatoDetalhes = ( props : ListRenderItemInfo<Contato> ) : ReactElement =
       <Text>{props.item.nome}</Text>
       <Text>{props.item.telefone}</Text>
       <Text>{props.item.email}</Text>
-    </View>
-  );
-}
-
-const ContatoFormulario = ( props : any ) => { 
-  return (
-    <View style={[props.estiloAtual.container, {justifyContent: "center"}]}>
-      <TextInput value={props.nome} placeholder="Nome Completo: "
-        onChangeText={props.setNome}
-        style={props.estiloAtual.input}
-        placeholderTextColor = {props.placeHolderColor}/>
-      <TextInput value={props.telefone} placeholder="Telefone: "
-        onChangeText={props.setTelefone}
-        style={props.estiloAtual.input}
-        placeholderTextColor = {props.placeHolderColor}/>
-      <TextInput value={props.email} placeholder="Email: "
-        onChangeText={props.setEmail}
-        style={props.estiloAtual.input}
-        placeholderTextColor = {props.placeHolderColor}/>
-      <Button title="Salvar" onPress={()=>{
-        const obj : Contato = { id : 0,
-          nome: props.nome, telefone: props.telefone, email: props.email };
-        props.setLista( [...props.lista,  obj ] );
-        
-        ToastAndroid.show("Contato Salvo", ToastAndroid.LONG);
-        props.setNome("");
-        props.setTelefone("");
-        props.setEmail("");
-      }} />
-      <Button title="Pesquisar" onPress={()=>{
-        console.log("Pesquisar acionado", props.lista);
-        for(const contato of props.lista) { 
-          console.log("Contato: ", contato);
-          if( contato.nome.includes( props.nome )) { 
-            props.setNome( contato.nome );
-            props.setTelefone( contato.telefone );
-            props.setEmail( contato.email );
-          }
-        }
-      }}/>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
-
-const ContatoListagem = ( props : any ) => { 
-  return (
-    <View style={[props.estiloAtual.container, {flex: 8}]}>
-        <TextInput value={props.filtro} placeholder="Filtro: "
-          onChangeText={props.setFiltro}
-          style={props.estiloAtual.input}
-          placeholderTextColor = {props.placeHolderColor}/>
-        <Text> Lista </Text>
-        <FlatList data = {props.listaFiltrada}
-          renderItem = { ContatoDetalhes }
-          keyExtractor = { 
-          (contato: Contato) => `contato-${contato.id}`
-          }
-          initialNumToRender={10}
-          windowSize={9}
-          maxToRenderPerBatch={4}
-          updateCellsBatchingPeriod={50}
-          ListHeaderComponent={<Text>Cabeçalho</Text>}
-          ListFooterComponent={<Text>Rodapé</Text>}
-          ItemSeparatorComponent={<View 
-            style={{flex: 1, height: 2, backgroundColor: "black"}}/>}
-          />
     </View>
   );
 }
@@ -137,6 +64,8 @@ export default function App() {
 
   const [filtro, setFiltro] = useState<string>("");
 
+  const [showFormulario, setShowFormulario] = useState<boolean>(false);
+
   const estiloAtual = isDark ? estiloDark : estiloLight;
   const placeHolderColor = isDark ? "lightgray" : "darkgray";
   const iconColor = isDark ? "white" : "black";
@@ -150,41 +79,90 @@ export default function App() {
 
 
   return (
-    <NavigationContainer>
-      <View style={estiloAtual.main}>
-        <View style={estiloAtual.topBar}>
-          <Icons name={iconName} size={32} color={iconColor} onPress={()=>{
-            setDark(  !isDark  );
-          }}/>
-        </View>
-        <View style={estiloAtual.container}>
-          <Navigator>
-            <Screen name="Listagem">
-                { ()=><ContatoListagem 
-                  estiloAtual={estiloAtual}
-                  filtro={filtro}
-                  setFiltro={setFiltro}
-                  listaFiltrada={listaFiltrada}
-                  placeHolderColor={placeHolderColor}/> }
-            </Screen>
-            <Screen name="Formulario">
-                { ()=><ContatoFormulario 
-                  estiloAtual={estiloAtual}
-                  nome={nome}
-                  setNome={setNome}
-                  telefone={telefone}
-                  setTelefone={setTelefone}
-                  email={email}
-                  setEmail={setEmail}
-                  lista={lista}
-                  setLista={setLista}
-                  setFiltro={setFiltro}
-                  placeHolderColor={placeHolderColor}/> }
-            </Screen>
-          </Navigator>
-        </View>
+    <View style={estiloAtual.main}>
+      <View style={estiloAtual.topBar}>
+        <Icons name={iconName} size={32} color={iconColor} onPress={()=>{
+          setDark(  !isDark  );
+        }}/>
+        <Icons name="edit" size={32} color={iconColor} onPress={()=>{
+          setShowFormulario(true);
+        }}/>
       </View>
-    </NavigationContainer>
+      <Modal transparent={true} visible={showFormulario}>
+        <View style={[estiloAtual.container, {flex: 1, justifyContent: "center"}]}>
+          <TextInput value={nome} placeholder="Nome Completo: "
+            onChangeText={setNome}
+            style={estiloAtual.input}
+            placeholderTextColor = {placeHolderColor}/>
+          <TextInput value={telefone} placeholder="Telefone: "
+            onChangeText={setTelefone}
+            style={estiloAtual.input}
+            placeholderTextColor = {placeHolderColor}/>
+          <TextInput value={email} placeholder="Email: "
+            onChangeText={setEmail}
+            style={estiloAtual.input}
+            placeholderTextColor = {placeHolderColor}/>
+          <Button title="Salvar" onPress={()=>{
+            const obj : Contato = { id : 0,
+              nome, telefone, email };
+            setLista( [...lista,  obj ] );
+            
+            ToastAndroid.show("Contato Salvo", ToastAndroid.LONG);
+            setNome("");
+            setTelefone("");
+            setEmail("");
+          }} />
+          <Button title="Pesquisar" onPress={()=>{
+            console.log("Pesquisar acionado", lista);
+            for(const contato of lista) { 
+              console.log("Contato: ", contato);
+              if( contato.nome.includes( nome )) { 
+                setNome( contato.nome );
+                setTelefone( contato.telefone );
+                setEmail( contato.email );
+              }
+            }
+          }}/>
+          <Button title="Fechar" onPress={
+            ()=>{setShowFormulario(false)}}/>
+          <StatusBar style="auto" />
+        </View>
+      </Modal>
+      <View style={[estiloAtual.container, {flex: 8}]}>
+          <TextInput value={filtro} placeholder="Filtro: "
+            onChangeText={setFiltro}
+            style={estiloAtual.input}
+            placeholderTextColor = {placeHolderColor}/>
+            <Text> Lista </Text>
+          <ScrollView>
+            <FlatList data = {listaFiltrada}
+              renderItem = { ContatoDetalhes }
+              keyExtractor = { 
+              (contato: Contato) => `contato-${contato.id}`
+              }
+              horizontal ={false}
+              //isso aqui especificar qual é o numeros de colunas que voce que
+              numColumns={3}
+              //vai inicialmente vai indenciar 10 elementos na tela 
+              initialNumToRender={10}
+              //ele gerat 9 telas e vai se preparar quando voce vai la em baixo
+              windowSize={9}
+              maxToRenderPerBatch={4}
+              //a cada 50 miili segundo 
+              updateCellsBatchingPeriod={50}
+              //no rest list temos o header
+              //esse aqui vai aparecer no topo da lista
+              ListHeaderComponent={<Text>Cabeçalho</Text>}
+              //temos o foorter ou rodape
+              ListFooterComponent={<Text>Rodape</Text>}
+              ItemSeparatorComponent={<View
+                style={{flex:1,height:2,backgroundColor:"black"}}
+              />}
+              />
+          </ScrollView>
+
+      </View>
+    </View>
   );
 }
 
