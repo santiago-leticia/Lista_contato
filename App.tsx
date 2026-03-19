@@ -1,6 +1,6 @@
 import { ReactElement, useEffect, useLayoutEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Button, FlatList, FlatListProps, ListRenderItemInfo, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, useColorScheme, View } from 'react-native';
+import { Button, FlatList, FlatListProps, ListRenderItemInfo, ScrollView,Modal, StyleSheet, Text, TextInput, ToastAndroid, useColorScheme, View } from 'react-native';
 import { AntDesign as Icons } from '@expo/vector-icons';
 
 
@@ -12,20 +12,22 @@ interface Contato {
 }
 
 //essa forma de exibir os dados esta muito interna e vamos extadir
-const ContatoDetalhes = ( props : ListRenderItemInfo<Contato> ): ReactElement => {
+const ContatoDetalhes = ( props : ListRenderItemInfo<Contato> ) : ReactElement => {
   return (
-    <View>
-        <Text>{props.item.nome}</Text>
-        <Text>{props.item.telefone}</Text>
-        <Text>{props.item.email}</Text>
+    <View style={{marginVertical: 10, marginHorizontal: 5,
+      backgroundColor: "lightgray", borderRadius: 20,
+      padding: 10}}>
+      <Text>{props.item.nome}</Text>
+      <Text>{props.item.telefone}</Text>
+      <Text>{props.item.email}</Text>
     </View>
-  )
+  );
 }
 
 export default function App() {
   const colorScheme = useColorScheme();
   const [lista, setLista] = useState<Contato[]>([
-    {id: 1, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
+    {id: 1, nome: "Joao Silva 2", telefone: "(11) 1111-1111", email: "joao@teste.com"},
     {id: 2, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
     {id: 3, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},
     {id: 4, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
@@ -33,7 +35,25 @@ export default function App() {
     {id: 6, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},
     {id: 7, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
     {id: 8, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
-    {id: 9, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"}        
+    {id: 9, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},        
+    {id: 11, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
+    {id: 12, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
+    {id: 13, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},
+    {id: 14, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
+    {id: 15, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
+    {id: 16, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},
+    {id: 17, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
+    {id: 18, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
+    {id: 19, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},       
+    {id: 21, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
+    {id: 22, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
+    {id: 23, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},
+    {id: 24, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
+    {id: 25, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
+    {id: 26, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},
+    {id: 27, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
+    {id: 28, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
+    {id: 29, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},       
   ]);  
   const [nome, setNome] = useState<string>("");
   const [telefone, setTelefone] = useState<string>("");
@@ -43,6 +63,8 @@ export default function App() {
   );
 
   const [filtro, setFiltro] = useState<string>("");
+
+  const [shoFormulario, setShowFormulario] = useState<boolean>(false);
 
   const estiloAtual = isDark ? estiloDark : estiloLight;
   const placeHolderColor = isDark ? "lightgray" : "darkgray";
@@ -54,53 +76,63 @@ export default function App() {
     return objContato.nome.includes( filtro )
   } );
 
-
+  //Modal: gerar uma tela vai aparecee na frente das outras telas e pode aparece das outras telas
 
   return (
+    //O icon isDark vai mudar o estilo da imagem 
     <View style={estiloAtual.main}>
       <View style={estiloAtual.topBar}>
         <Icons name={iconName} size={32} color={iconColor} onPress={()=>{
           setDark(  !isDark  );
         }}/>
-      </View>
-      <View style={estiloAtual.container}>
-        <TextInput value={nome} placeholder="Nome Completo: "
-          onChangeText={setNome}
-          style={estiloAtual.input}
-          placeholderTextColor = {placeHolderColor}/>
-        <TextInput value={telefone} placeholder="Telefone: "
-          onChangeText={setTelefone}
-          style={estiloAtual.input}
-          placeholderTextColor = {placeHolderColor}/>
-        <TextInput value={email} placeholder="Email: "
-          onChangeText={setEmail}
-          style={estiloAtual.input}
-          placeholderTextColor = {placeHolderColor}/>
-        <Button title="Salvar" onPress={()=>{
-          const obj : Contato = { id : 0,
-            nome, telefone, email };
-
-          // setLista( [...lista, obj] );
-          setLista( [...lista,  obj ] );
-          
-          ToastAndroid.show("Contato Salvo", ToastAndroid.LONG);
-          setNome("");
-          setTelefone("");
-          setEmail("");
-        }} />
-        <Button title="Pesquisar" onPress={()=>{
-          console.log("Pesquisar acionado", lista);
-          for(const contato of lista) { 
-            console.log("Contato: ", contato);
-            if( contato.nome.includes( nome )) { 
-              setNome( contato.nome );
-              setTelefone( contato.telefone );
-              setEmail( contato.email );
-            }
-          }
+        <Icons name="edit" size={32} color={iconColor} onPress={()=>{
+          setShowFormulario(true);
         }}/>
-        <StatusBar style="auto" />
       </View>
+      <Modal transparent={true} visible={shoFormulario}>
+        <View style={[estiloAtual.container, {flex: 1, justifyContent: "center"}]}>
+          <TextInput value={nome} placeholder="Nome Completo: "
+            onChangeText={setNome}
+            style={estiloAtual.input}
+            placeholderTextColor = {placeHolderColor}/>
+          <TextInput value={telefone} placeholder="Telefone: "
+            onChangeText={setTelefone}
+            style={estiloAtual.input}
+            placeholderTextColor = {placeHolderColor}/>
+          <TextInput value={email} placeholder="Email: "
+            onChangeText={setEmail}
+            style={estiloAtual.input}
+            placeholderTextColor = {placeHolderColor}/>
+          <Button title="Salvar" onPress={()=>{
+            const obj : Contato = { id : 0,
+              nome, telefone, email };
+
+            // setLista( [...lista, obj] );
+            setLista( [...lista,  obj ] );
+            
+            ToastAndroid.show("Contato Salvo", ToastAndroid.LONG);
+            setNome("");
+            setTelefone("");
+            setEmail("");
+          }} />
+          <Button title="Pesquisar" onPress={()=>{
+            console.log("Pesquisar acionado", lista);
+            for(const contato of lista) { 
+              console.log("Contato: ", contato);
+              if( contato.nome.includes( nome )) { 
+                setNome( contato.nome );
+                setTelefone( contato.telefone );
+                setEmail( contato.email );
+              }
+            }
+          }}/>
+          <Button title='Fechar' onPress={()=>{
+            //Quando voce vai no lapis vai na parte de escrever os nomes completos, telefone e email, mas quando voce vai no fechar. voce sai de la.
+            setShowFormulario(false);
+          }}/>
+          <StatusBar style="auto" />
+        </View>
+      </Modal>
       <View style={[estiloAtual.container, {flex: 8}]}>
           <TextInput value={filtro} placeholder="Filtro: "
             onChangeText={setFiltro}
@@ -113,6 +145,24 @@ export default function App() {
               keyExtractor = { 
               (contato: Contato) => `contato-${contato.id}`
               }
+              horizontal ={false}
+              //isso aqui especificar qual é o numeros de colunas que voce que
+              numColumns={3}
+              //vai inicialmente vai indenciar 10 elementos na tela 
+              initialNumToRender={10}
+              //ele gerat 9 telas e vai se preparar quando voce vai la em baixo
+              windowSize={9}
+              maxToRenderPerBatch={4}
+              //a cada 50 miili segundo 
+              updateCellsBatchingPeriod={50}
+              //no rest list temos o header
+              //esse aqui vai aparecer no topo da lista
+              ListHeaderComponent={<Text>Cabeçalho</Text>}
+              //temos o foorter ou rodape
+              ListFooterComponent={<Text>Rodape</Text>}
+              ItemSeparatorComponent={<View
+                style={{flex:1,height:2,backgroundColor:"black"}}
+              />}
               />
           </ScrollView>
       </View>
@@ -129,6 +179,8 @@ const estiloLight = StyleSheet.create({
   },
   topBar: {
     flex: 1,
+    flexDirection:"row",
+    justifyContent:'flex-end',
     backgroundColor: '#fff',
   },
   container: {
@@ -158,11 +210,14 @@ const estiloDark = StyleSheet.create({
   },
   topBar: {
     flex: 1,
+    //vai mover os valores
+    flexDirection:"row",
+    justifyContent:'flex-end',
     backgroundColor: 'black',
   },
   container: {
     flex: 11,
-    backgroundColor: 'black',
+    backgroundColor: '#000',
     alignItems: 'stretch',
     justifyContent: 'center',
     color : "white"
