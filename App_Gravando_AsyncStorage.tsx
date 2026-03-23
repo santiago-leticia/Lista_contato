@@ -6,8 +6,6 @@ import { Button, FlatList, FlatListProps, ListRenderItemInfo,
 import { AntDesign as Icons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 const {Screen, Navigator} = createBottomTabNavigator()
 
@@ -32,38 +30,39 @@ const ContatoDetalhes = ( props : ListRenderItemInfo<Contato> ) : ReactElement =
 }
 
 const ContatoFormulario = ( props : any ) => { 
-  const [nome, setNome] = useState<string>("");
-  const [telefone, setTelefone] = useState<string>("");
-  const [email, setEmail] = useState<string>("");  
   return (
     <View style={[props.estiloAtual.container, {justifyContent: "center"}]}>
-      <TextInput value={nome} placeholder="Nome Completo: "
-        onChangeText={setNome}
+      <TextInput value={props.nome} placeholder="Nome Completo: "
+        onChangeText={props.setNome}
         style={props.estiloAtual.input}
         placeholderTextColor = {props.placeHolderColor}/>
-      <TextInput value={telefone} placeholder="Telefone: "
-        onChangeText={setTelefone}
+      <TextInput value={props.telefone} placeholder="Telefone: "
+        onChangeText={props.setTelefone}
         style={props.estiloAtual.input}
         placeholderTextColor = {props.placeHolderColor}/>
-      <TextInput value={email} placeholder="Email: "
-        onChangeText={setEmail}
+      <TextInput value={props.email} placeholder="Email: "
+        onChangeText={props.setEmail}
         style={props.estiloAtual.input}
         placeholderTextColor = {props.placeHolderColor}/>
       <Button title="Salvar" onPress={()=>{
         const obj : Contato = { id : 0,
-          nome, telefone, email };
-        props.salvar( obj );
+          nome: props.nome, telefone: props.telefone, email: props.email };
+        props.setLista( [...props.lista,  obj ] );
+        
         ToastAndroid.show("Contato Salvo", ToastAndroid.LONG);
-        setNome("");
-        setTelefone("");
-        setEmail("");
+        props.setNome("");
+        props.setTelefone("");
+        props.setEmail("");
       }} />
       <Button title="Pesquisar" onPress={()=>{
-        const contato = props.pesquisar( nome );
-        if (contato != null) {
-          setNome( contato.nome );
-          setTelefone( contato.telefone );
-          setEmail( contato.email );  
+        console.log("Pesquisar acionado", props.lista);
+        for(const contato of props.lista) { 
+          console.log("Contato: ", contato);
+          if( contato.nome.includes( props.nome )) { 
+            props.setNome( contato.nome );
+            props.setTelefone( contato.telefone );
+            props.setEmail( contato.email );
+          }
         }
       }}/>
       <StatusBar style="auto" />
@@ -74,7 +73,6 @@ const ContatoFormulario = ( props : any ) => {
 const ContatoListagem = ( props : any ) => { 
   return (
     <View style={[props.estiloAtual.container, {flex: 8}]}>
-        <Button title="Carregar Dados" onPress={props.onRefresh}/>
         <TextInput value={props.filtro} placeholder="Filtro: "
           onChangeText={props.setFiltro}
           style={props.estiloAtual.input}
@@ -103,8 +101,11 @@ const ContatoListagem = ( props : any ) => {
 export default function App() {
   const colorScheme = useColorScheme();
   const [lista, setLista] = useState<Contato[]>([]);  
+  const [nome, setNome] = useState<string>("");
+  const [telefone, setTelefone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [isDark, setDark] = useState<boolean>(
-  colorScheme == "dark" ? true : false
+    colorScheme == "dark" ? true : false
   );
 
   const [filtro, setFiltro] = useState<string>("");
@@ -121,46 +122,20 @@ export default function App() {
     return objContato.nome.includes( filtro )
   } );
 
-  const salvar = ( contato : Contato ) => {
-    const novoContador = contador + 1;
-    setLista( ( listaAntiga : Contato[] )=>{
-      contato.id = novoContador;
-      const novaLista = [...listaAntiga, contato];
-      const novaListaSerializada = JSON.stringify( novaLista );      
-      AsyncStorage.setItem("LISTA_CONTATOS", novaListaSerializada);
-      AsyncStorage.setItem("CONTADOR", novoContador.toString() );
-      return novaLista;
-    } );
-    setContador( novoContador );
-  } 
 
-  const pesquisar = ( nome : string ) : Contato | null => {
-    console.log("Pesquisar acionado", lista);
-    for(const contato of lista) { 
-      console.log("Contato: ", contato);
-      if( contato.nome.includes( nome )) { 
-        return contato;
-      }
-    }
-    return null;
-  }
-
-
-  const onRefresh = async () => { 
+  const onRefresh = () => { 
     setCarregando(true);
-    try { 
-      const strContador = await AsyncStorage.getItem("CONTADOR");
-      const strLista = await AsyncStorage.getItem("LISTA_CONTATOS");
-      if (strContador != null) {
-        setContador( parseInt(strContador) + 1);
-      }
-      if (strLista != null) {
-        setLista( JSON.parse(strLista) );
-      }
-    } catch ( err ) { 
-      ToastAndroid.show("Erro ao carregar os dados", ToastAndroid.LONG);
-    }
-    setCarregando(false);
+    setTimeout( () => {
+      const listaTemp : Contato[] = [];
+      // for (let i = contador; 
+      //     i < contador + 7 && i < listaContatosInicial.length; i++) {
+      //   const contato : Contato = listaContatosInicial[ i ];
+      //   listaTemp.push( contato );
+      // }
+      setContador( contador + 7 );
+      setLista( [...lista, ...listaTemp] );
+      setCarregando(false);
+    }, 2000);
   }
 
 
@@ -187,9 +162,13 @@ export default function App() {
             <Screen name="Formulario">
                 { ()=><ContatoFormulario 
                   estiloAtual={estiloAtual}
+                  nome={nome}
+                  setNome={setNome}
+                  telefone={telefone}
+                  setTelefone={setTelefone}
+                  email={email}
+                  setEmail={setEmail}
                   lista={lista}
-                  salvar={salvar}
-                  pesquisar={pesquisar}
                   setLista={setLista}
                   setFiltro={setFiltro}
                   placeHolderColor={placeHolderColor}/> }
