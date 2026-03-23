@@ -1,14 +1,13 @@
 import { ReactElement, useEffect, useLayoutEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Button, FlatList, FlatListProps, ListRenderItemInfo, Modal, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, useColorScheme, View } from 'react-native';
+import { Button, FlatList, FlatListProps, ListRenderItemInfo, 
+  Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, 
+  ToastAndroid, useColorScheme, View } from 'react-native';
 import { AntDesign as Icons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 const {Screen, Navigator} = createBottomTabNavigator()
-
-//depois vamos gerar uma arquitetura por meio de entidade e ai a gente vai separar esses tem
-
 
 interface Contato {
   id : number; 
@@ -78,7 +77,6 @@ const ContatoListagem = ( props : any ) => {
           onChangeText={props.setFiltro}
           style={props.estiloAtual.input}
           placeholderTextColor = {props.placeHolderColor}/>
-        <Text> Lista </Text>
         <FlatList data = {props.listaFiltrada}
           renderItem = { ContatoDetalhes }
           keyExtractor = { 
@@ -90,6 +88,10 @@ const ContatoListagem = ( props : any ) => {
           updateCellsBatchingPeriod={50}
           ListHeaderComponent={<Text>Cabeçalho</Text>}
           ListFooterComponent={<Text>Rodapé</Text>}
+          ListEmptyComponent={<Text>Nâo há elementos na lista</Text>}
+          refreshControl={<RefreshControl refreshing={props.loading} 
+                    onRefresh={props.onRefresh}
+                    />}
           ItemSeparatorComponent={<View 
             style={{flex: 1, height: 2, backgroundColor: "black"}}/>}
           />
@@ -97,9 +99,8 @@ const ContatoListagem = ( props : any ) => {
   );
 }
 
-export default function App() {
-  const colorScheme = useColorScheme();
-  const [lista, setLista] = useState<Contato[]>([
+const listaContatosInicial =
+  [
     {id: 1, nome: "Joao Silva 2", telefone: "(11) 1111-1111", email: "joao@teste.com"},
     {id: 2, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
     {id: 3, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},
@@ -127,7 +128,11 @@ export default function App() {
     {id: 27, nome: "Joao Silva", telefone: "(11) 1111-1111", email: "joao@teste.com"},
     {id: 28, nome: "Maria Silva", telefone: "(11) 2222-2222", email: "maria@teste.com"},
     {id: 29, nome: "Jose Santos", telefone: "(13) 3333-3333", email: "jose@teste.com"},       
-  ]);  
+  ];
+
+export default function App() {
+  const colorScheme = useColorScheme();
+  const [lista, setLista] = useState<Contato[]>([]);  
   const [nome, setNome] = useState<string>("");
   const [telefone, setTelefone] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -136,6 +141,9 @@ export default function App() {
   );
 
   const [filtro, setFiltro] = useState<string>("");
+  const [carregando, setCarregando] = useState<boolean>(false);
+  const [contador, setContador] = useState<number>(0);
+
 
   const estiloAtual = isDark ? estiloDark : estiloLight;
   const placeHolderColor = isDark ? "lightgray" : "darkgray";
@@ -147,6 +155,22 @@ export default function App() {
     return objContato.nome.includes( filtro )
   } );
 
+// vai carregar mais sete e nao tudo
+  const onRefresh = () => { 
+    setCarregando(true);
+    setTimeout( () => {
+      const listaTemp : Contato[] = [];
+      for (let i = contador; i < contador+ 7 && 
+        i< listaContatosInicial.length; i++
+      ) {
+        const contato : Contato = listaContatosInicial[ i ];
+        listaTemp.push( contato );
+      }
+      setContador( contador+7 );
+      setLista( [...lista, ...listaTemp] );
+      setCarregando(false);
+    }, 2000);
+  }
 
 
   return (
@@ -165,7 +189,9 @@ export default function App() {
                   filtro={filtro}
                   setFiltro={setFiltro}
                   listaFiltrada={listaFiltrada}
-                  placeHolderColor={placeHolderColor}/> }
+                  placeHolderColor={placeHolderColor}
+                  onRefresh={onRefresh}
+                  loading={carregando}/> }
             </Screen>
             <Screen name="Formulario">
                 { ()=><ContatoFormulario 
